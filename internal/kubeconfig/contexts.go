@@ -5,7 +5,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (k *Kubeconfig) contextsNode() (*yaml.Node, error) {
+func (k *SingleKubeconfig) contextsNode() (*yaml.Node, error) {
 	contexts := valueOf(k.rootNode, "contexts")
 	if contexts == nil {
 		return nil, errors.New("\"contexts\" entry is nil")
@@ -15,7 +15,7 @@ func (k *Kubeconfig) contextsNode() (*yaml.Node, error) {
 	return contexts, nil
 }
 
-func (k *Kubeconfig) contextNode(name string) (*yaml.Node, error) {
+func (k *SingleKubeconfig) contextNode(name string) (*yaml.Node, error) {
 	contexts, err := k.contextsNode()
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (k *Kubeconfig) contextNode(name string) (*yaml.Node, error) {
 	return nil, errors.Errorf("context with name %q not found", name)
 }
 
-func (k *Kubeconfig) ContextNames() []string {
+func (k *SingleKubeconfig) ContextNames() []string {
 	contexts := valueOf(k.rootNode, "contexts")
 	if contexts == nil {
 		return nil
@@ -50,10 +50,12 @@ func (k *Kubeconfig) ContextNames() []string {
 }
 
 func (k *Kubeconfig) ContextExists(name string) bool {
-	ctxNames := k.ContextNames()
-	for _, v := range ctxNames {
-		if v == name {
-			return true
+	for _, config := range k.ConfigsMap {
+		ctxNames := config.ContextNames()
+		for _, v := range ctxNames {
+			if v == name {
+				return true
+			}
 		}
 	}
 	return false

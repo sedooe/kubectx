@@ -19,7 +19,7 @@ func TestKubeconfig_ContextNames(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx := kc.ContextNames()
+	ctx := kc.Current.ContextNames()
 	expected := []string{"abc", "def", "ghi"}
 	if diff := cmp.Diff(expected, ctx); diff != "" {
 		t.Fatalf("%s", diff)
@@ -32,7 +32,7 @@ func TestKubeconfig_ContextNames_noContextsEntry(t *testing.T) {
 	if err := kc.Parse(); err != nil {
 		t.Fatal(err)
 	}
-	ctx := kc.ContextNames()
+	ctx := kc.Current.ContextNames()
 	var expected []string = nil
 	if diff := cmp.Diff(expected, ctx); diff != "" {
 		t.Fatalf("%s", diff)
@@ -45,7 +45,7 @@ func TestKubeconfig_ContextNames_nonArrayContextsEntry(t *testing.T) {
 	if err := kc.Parse(); err != nil {
 		t.Fatal(err)
 	}
-	ctx := kc.ContextNames()
+	ctx := kc.Current.ContextNames()
 	var expected []string = nil
 	if diff := cmp.Diff(expected, ctx); diff != "" {
 		t.Fatalf("%s", diff)

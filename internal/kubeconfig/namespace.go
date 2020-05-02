@@ -1,17 +1,31 @@
 package kubeconfig
 
-import "gopkg.in/yaml.v3"
+import (
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
+)
 
 const (
 	defaultNamespace = "default"
 )
 
 func (k *Kubeconfig) NamespaceOfContext(contextName string) (string, error) {
-	ctx, err := k.contextNode(contextName)
-	if err != nil {
-		return "", err
+	var context *yaml.Node
+
+	for _, kc := range k.ConfigsMap {
+		ctx, _ := kc.contextNode(contextName)
+		if ctx != nil {
+			context = ctx;
+			k.Current = kc
+			break
+		}
 	}
-	ctxBody := valueOf(ctx, "context")
+
+	if context == nil {
+		return "", errors.Errorf("context with name %q not found", contextName)
+	}
+
+	ctxBody := valueOf(context, "context")
 	if ctxBody == nil {
 		return defaultNamespace, nil
 	}
@@ -23,7 +37,7 @@ func (k *Kubeconfig) NamespaceOfContext(contextName string) (string, error) {
 }
 
 func (k *Kubeconfig) SetNamespace(ctxName string, ns string) error {
-	ctxNode, err := k.contextNode(ctxName)
+	ctxNode, err := k.Current.contextNode(ctxName)
 	if err != nil {
 		return err
 	}

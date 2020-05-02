@@ -16,8 +16,9 @@ import (
 type ListOp struct{}
 
 func (_ ListOp) Run(stdout, stderr io.Writer) error {
-	kc := new(kubeconfig.Kubeconfig).WithLoader(cmdutil.DefaultLoader)
+	kc := new(kubeconfig.Kubeconfig).WithLoader(kubeconfig.DefaultLoader)
 	defer kc.Close()
+
 	if err := kc.Parse(); err != nil {
 		if cmdutil.IsNotFoundErr(err) {
 			printer.Warning(stderr, "kubeconfig file not found")
@@ -26,16 +27,19 @@ func (_ ListOp) Run(stdout, stderr io.Writer) error {
 		return errors.Wrap(err, "kubeconfig error")
 	}
 
-	ctxs := kc.ContextNames()
-	natsort.Sort(ctxs)
+	for _, config := range kc.ConfigsMap {
+		ctxs := config.ContextNames()
+		natsort.Sort(ctxs)
 
-	cur := kc.GetCurrentContext()
-	for _, c := range ctxs {
-		s := c
-		if c == cur {
-			s = printer.ActiveItemColor.Sprint(c)
+		cur := kc.GetCurrentContext()
+		for _, c := range ctxs {
+			s := c
+			if c == cur {
+				s = printer.ActiveItemColor.Sprint(c)
+			}
+			fmt.Fprintf(stdout, "%s\n", s)
 		}
-		fmt.Fprintf(stdout, "%s\n", s)
 	}
+
 	return nil
 }
